@@ -1,0 +1,55 @@
+app:
+  addr: ":8080"
+  domain: "localhost"
+  allow_origins:
+    - "http://localhost:3000"
+  shutdown_timeout: 5s
+
+jwt:
+  user:
+    secret_key: "your_user_secret_key"
+    access_token_ttl: 1h
+    refresh_token_ttl: 720h
+  chat:
+    secret_key: "your_chat_secret_key"
+    token_ttl: 1m
+
+db:
+  uri: "mongodb://USER:PASS@localhost:27017"
+
+broker:
+  servers:
+    - "localhost:4222"
+
+oauth:
+  google: # https://console.developers.google.com/apis/credentials
+    scopes:
+      - "email"
+      - "profile"
+    client_id: "your-google-client-id"
+    client_secret: "your-google-client-secret"
+    redirect_url: "http://localhost:3000/oauth/google/callback"
+    user_endpoint: "https://www.googleapis.com/oauth2/v2/userinfo"
+  github: # https://github.com/settings/developers
+    scopes:
+      - "login:info"
+      - "login:email"
+      - "login:avatar"
+    client_id: "your-github-client-id"
+    client_secret: "your-github-client-secret"
+    redirect_url: "http://localhost:3000/oauth/github/callback"
+    user_endpoint: "https://api.github.com/user"
+  yandex: # https://oauth.yandex.ru/client/my
+    scopes:
+      - "read_user"
+    client_id: "your-yandex-client-id"
+    client_secret: "your-yandex-client-secret"
+    redirect_url: "http://localhost:3000/oauth/yandex/callback"
+    user_endpoint: "https://login.yandex.ru/info?format=json"
+  gitlab: # https://gitlab.com/oauth/applications
+    scopes:
+      - "user:email"
+    client_id: "your-gitlab-client-id"
+    client_secret: "your-gitlab-client-secret"
+    redirect_url: "http://localhost:3000/oauth/gitlab/callback"
+    user_endpoint: "https://gitlab.com/api/v4/user"

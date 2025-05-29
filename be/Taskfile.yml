@@ -1,0 +1,75 @@
+version: '3'
+
+vars:
+  GOBIN: "$(pwd)/bin"
+  VERSION: "unknown"
+
+  DOCKER_IMAGE: "escalopa/chatterly"
+
+tasks:
+  run:
+    cmds:
+      - go run cmd/main.go
+
+  mock:
+    cmds:
+      - "{{.GOBIN}}/mockgen -source=internal/service/service.go -destination=internal/service/mock/service.go -package=mock"
+
+  format:
+    cmds:
+      - task: go_files
+        vars: { COMMAND: 'gofmt -w  {} +'}
+      - task: go_files
+        vars: { COMMAND: '{{.GOBIN}}/goimports -w  {} +'}
+
+  test:
+    cmds:
+      - go test -v -cover -json -coverprofile=coverage.out
+        $(go list ./... | grep -Ewv "(mock$|cmd$)") | {{.GOBIN}}/gotestfmt
+
+  lint:
+    cmds:
+      - "{{.GOBIN}}/revive
+        -config revive.toml
+        -formatter friendly
+        -exclude ./**/mock
+        ./..."
+
+  commit:
+    cmds:
+      - task: format
+      - task: lint
+      - task: test
+
+  deps:
+    cmds:
+      - GOBIN={{.GOBIN}} go install golang.org/x/tools/cmd/goimports@v0.19.0
+      - GOBIN={{.GOBIN}} go install github.com/mgechev/revive@v1.3.7
+      - GOBIN={{.GOBIN}} go install github.com/golang/mock/mockgen@v1.6.0
+      - GOBIN={{.GOBIN}} go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@v2.5.0
+
+  # docker
+
+  docker-build:
+    cmds:
+      - docker build -t {{.DOCKER_IMAGE}}:{{.VERSION}} .
+
+  docker-push:
+    cmds:
+      - docker push {{.DOCKER_IMAGE}}:{{.VERSION}}
+
+  docker-release:
+    cmds:
+      - task: docker-build
+      - task: docker-push
+
+  # internal
+
+  go_files:
+    desc: "Return all .go files and run .COMMAND on them"
+    internal: true
+    cmds:
+      - find .
+        -name "*.go"
+        -not -path ./mock
+        -exec {{.COMMAND}};
